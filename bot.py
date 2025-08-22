@@ -13,6 +13,14 @@ DB_CONFIG = {
     "port": os.getenv("DB_PORT", 5432),
 }
 
+TABLES = [
+    "rAddressProblem",
+    "rApplication",
+    "rApplicationAction",
+    "rApplicationAnswer",
+    "rComments"
+]
+
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
@@ -21,15 +29,8 @@ def get_table_counts():
     conn = psycopg2.connect(**DB_CONFIG)
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema='public';
-    """)
-    tables = [row[0] for row in cursor.fetchall()]
-
     result = []
-    for t in tables:
+    for t in TABLES:
         cursor.execute(f'SELECT COUNT(*) FROM public."{t}";')
         count = cursor.fetchone()[0]
         result.append(f"{t}: {count}")
@@ -43,7 +44,7 @@ def get_table_counts():
 async def start(message: types.Message):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add("📊 Количество записей")
-    await message.answer("Привет! Нажми кнопку чтобы узнать количество записей в таблицах.", reply_markup=keyboard)
+    await message.answer("Привет! Нажми кнопку, чтобы узнать количество записей в таблицах.", reply_markup=keyboard)
 
 
 @dp.message_handler(lambda msg: msg.text == "📊 Количество записей")
