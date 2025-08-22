@@ -46,8 +46,11 @@ def get_table_counts():
 
 async def monitor_tables():
     """Фоновая задача — проверяет новые записи и шлет уведомления"""
-    await bot.wait_until_ready()
     global last_counts
+
+    # инициализируем реальными данными, чтобы не было спама при старте
+    if all(v == 0 for v in last_counts.values()):
+        last_counts = get_table_counts()
 
     while True:
         try:
@@ -58,14 +61,14 @@ async def monitor_tables():
                 new_records = counts[t] - last_counts.get(t, 0)
                 if new_records > 0:
                     messages.append(
-                        f"📂 <b>{t}</b>\n➕ Новых записей: <b>{new_records:,}</b>\n"
+                        f"📂 <b>{t}</b>\n"
+                        f"➕ Новых записей: <b>{new_records:,}</b>\n"
                         f"📊 Всего: <b>{counts[t]:,}</b>"
                         .replace(",", " ")
                     )
                 # обновляем last_counts
                 last_counts[t] = counts[t]
 
-            # если есть новые записи — отправляем сообщение
             if messages:
                 text = "<b>🔔 Новые данные в БД!</b>\n\n" + "\n\n".join(messages)
                 await bot.send_message(GROUP_CHAT_ID, text)
