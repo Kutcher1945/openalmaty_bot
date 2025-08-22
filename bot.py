@@ -21,7 +21,7 @@ TABLES = [
     "rComments"
 ]
 
-bot = Bot(token=API_TOKEN)
+bot = Bot(token=API_TOKEN, parse_mode="HTML")  # включаем HTML
 dp = Dispatcher(bot)
 
 
@@ -29,11 +29,12 @@ def get_table_counts():
     conn = psycopg2.connect(**DB_CONFIG)
     cursor = conn.cursor()
 
-    result = []
+    result = ["<b>📊 Количество записей:</b>\n\n<pre>━━━━━━━━━━━━━━━━━━━━━━━"]
     for t in TABLES:
         cursor.execute(f'SELECT COUNT(*) FROM public."{t}";')
         count = cursor.fetchone()[0]
-        result.append(f"{t}: {count}")
+        result.append(f"📂 {t:<18} → {count:,}".replace(",", " "))
+    result.append("━━━━━━━━━━━━━━━━━━━━━━━</pre>")
 
     cursor.close()
     conn.close()
@@ -50,7 +51,7 @@ async def start(message: types.Message):
 @dp.message_handler(lambda msg: msg.text == "📊 Количество записей")
 async def send_counts(message: types.Message):
     counts = get_table_counts()
-    await message.answer(f"📊 Количество записей:\n\n{counts}")
+    await message.answer(counts)
 
 
 if __name__ == "__main__":
